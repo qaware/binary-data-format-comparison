@@ -1,0 +1,67 @@
+plugins {
+    id 'com.github.davidmc24.gradle.plugin.avro' version '1.2.1'
+    id "com.google.protobuf" version "0.8.17"
+    
+    id 'application'
+    id 'java'
+}
+
+java.targetCompatibility = JavaVersion.VERSION_11
+java.sourceCompatibility = JavaVersion.VERSION_11
+
+group 'de.qaware'
+version '0.0.0'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation 'org.slf4j:slf4j-api:1.7.32'
+    runtimeOnly 'org.apache.logging.log4j:log4j-core:2.14.1'
+    runtimeOnly 'org.apache.logging.log4j:log4j-slf4j-impl:2.14.1'
+
+    compileOnly 'org.projectlombok:lombok:1.18.22'
+    annotationProcessor 'org.projectlombok:lombok:1.18.22'
+    
+    implementation 'org.apache.commons:commons-lang3:3.12.0'
+
+    implementation 'org.apache.parquet:parquet-common:1.12.1'
+    implementation 'org.apache.parquet:parquet-column:1.12.1'
+    implementation 'org.apache.parquet:parquet-avro:1.12.1'
+    implementation 'org.apache.parquet:parquet-hadoop:1.12.1'
+    implementation('org.apache.hadoop:hadoop-common:3.3.1') {
+        exclude group: 'org.slf4j', module: 'slf4j-api'
+        exclude group: 'org.slf4j', module: 'slf4j-log4j12'
+        exclude group: 'log4j', module: 'log4j'
+    }
+    runtimeOnly('org.apache.hadoop:hadoop-mapreduce-client-core:3.3.1') {
+        exclude group: 'org.slf4j', module: 'slf4j-api'
+        exclude group: 'org.slf4j', module: 'slf4j-log4j12'
+        exclude group: 'log4j', module: 'log4j'
+    }
+    implementation 'com.google.guava:guava:31.0.1-jre'
+
+    implementation 'org.apache.avro:avro:1.10.2'
+
+    implementation 'com.google.protobuf:protobuf-java:3.18.1'
+
+    implementation 'org.xerial:sqlite-jdbc:3.36.0.3'
+    implementation 'org.jdbi:jdbi3-core:3.23.0'
+    implementation 'org.jdbi:jdbi3-sqlobject:3.23.0'
+}
+
+application {
+    mainClass.set('de.qaware.TestApp')
+    applicationDefaultJvmArgs = [
+            '-Xmx16g'
+    ]
+}
+
+protobuf {
+    protoc {
+        artifact = 'com.google.protobuf:protoc:3.18.1'
+    }
+}
+
+sourceSets.main.java.srcDirs("${buildDir}/generated/source/proto/main/java")

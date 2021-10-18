@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+package de.qaware.data;
+
+message SampleDataPb {
+  int32 int1 = 1;
+  int32 int2 = 2;
+  int32 int3 = 3;
+  int32 int4 = 4;
+  int32 int5 = 5;
+  string string1 = 6;
+  string string2 = 7;
+  string string3 = 8;
+  string string4 = 9;
+  string string5 = 10;
+}

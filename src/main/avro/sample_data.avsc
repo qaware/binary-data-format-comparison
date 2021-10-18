@@ -1,0 +1,47 @@
+{
+  "type": "record",
+  "name": "SampleDataAvro",
+  "namespace": "de.qaware.data",
+  "fields": [
+    {
+      "name": "int1",
+      "type": "int"
+    },
+    {
+      "name": "int2",
+      "type": "int"
+    },
+    {
+      "name": "int3",
+      "type": "int"
+    },
+    {
+      "name": "int4",
+      "type": "int"
+    },
+    {
+      "name": "int5",
+      "type": "int"
+    },
+    {
+      "name": "string1",
+      "type": "string"
+    },
+    {
+      "name": "string2",
+      "type": "string"
+    },
+    {
+      "name": "string3",
+      "type": "string"
+    },
+    {
+      "name": "string4",
+      "type": "string"
+    },
+    {
+      "name": "string5",
+      "type": "string"
+    }
+  ]
+}
