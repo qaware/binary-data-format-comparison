@@ -36,7 +36,8 @@ import java.util.Random;
 @Slf4j
 @SuppressWarnings("java:S1215") // call GC here intentionally to measure heap usage
 public class TestApp {
-    private static final int NUM_DATA_SAMPLES = 5_000_000;
+    private static final int NUM_DATA_SAMPLES = 10_000_000;
+    private static final double NUM_STRINGS = 10_000;
 
     Random random = new Random();
 
@@ -81,10 +82,10 @@ public class TestApp {
 
     private void readAndMeasureAll() throws IOException {
         Map<String, TestReader> readerMap = new LinkedHashMap<>();
-        readerMap.put("group", new GroupTestReader(outputParquet));
-        readerMap.put("group.gzip", new GroupTestReader(outputParquetGzip));
-        readerMap.put("avroparquet", new AvroParquetTestReader<>(outputParquet, dataType));
-        readerMap.put("avroparquet.gzip", new AvroParquetTestReader<>(outputParquetGzip, dataType));
+        readerMap.put("group.parquet", new GroupTestReader(outputParquet));
+        readerMap.put("group.parquet.gzip", new GroupTestReader(outputParquetGzip));
+        readerMap.put("gen.parquet", new AvroParquetTestReader<>(outputParquet, dataType));
+        readerMap.put("gen.parquet.gzip", new AvroParquetTestReader<>(outputParquetGzip, dataType));
         readerMap.put("avro", new AvroTestReader(outputAvro, inputAvsc));
         readerMap.put("avro.gzip", new AvroTestReader(outputAvroGzip, inputAvsc));
         readerMap.put("avro.bzip2", new AvroTestReader(outputAvroBzip2, inputAvsc));
@@ -157,6 +158,12 @@ public class TestApp {
 
     private List<GenericRecord> generateRandomData() {
         log.info("Generating {} random data samples", NUM_DATA_SAMPLES);
+
+        List<String> stringPool = new ArrayList<>();
+        for (int i = 0; i < NUM_STRINGS; i++) {
+            stringPool.add(RandomStringUtils.randomAlphanumeric(0, 20));
+        }
+
         List<GenericRecord> allRecords = new ArrayList<>(NUM_DATA_SAMPLES);
         for (int i = 0; i < NUM_DATA_SAMPLES; i++) {
             var sample = SampleDataAvro.newBuilder()
@@ -165,15 +172,19 @@ public class TestApp {
                     .setInt3(random.nextInt())
                     .setInt4(random.nextInt())
                     .setInt5(random.nextInt())
-                    .setString1(RandomStringUtils.randomAlphanumeric(0, 10))
-                    .setString2(RandomStringUtils.randomAlphanumeric(0, 10))
-                    .setString3(RandomStringUtils.randomAlphanumeric(0, 10))
-                    .setString4(RandomStringUtils.randomAlphanumeric(0, 10))
-                    .setString5(RandomStringUtils.randomAlphanumeric(0, 10))
+                    .setString1(nextString(stringPool))
+                    .setString2(nextString(stringPool))
+                    .setString3(nextString(stringPool))
+                    .setString4(nextString(stringPool))
+                    .setString5(nextString(stringPool))
                     .build();
             allRecords.add(sample);
         }
         log.info("Generated {} random data samples", allRecords.size());
         return allRecords;
+    }
+
+    private String nextString(List<String> stringPool) {
+        return stringPool.get(random.nextInt(stringPool.size()));
     }
 }
