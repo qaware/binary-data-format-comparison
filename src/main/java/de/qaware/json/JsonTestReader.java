@@ -1,30 +1,34 @@
-package de.qaware.proto;
+package de.qaware.json;
 
 import de.qaware.api.TestReader;
 import de.qaware.compression.Compression;
-import de.qaware.data.SampleData;
 import lombok.RequiredArgsConstructor;
 
-import java.io.BufferedInputStream;
+import javax.json.bind.Jsonb;
+import javax.json.bind.JsonbBuilder;
+import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
 @RequiredArgsConstructor
-public class ProtoTestReader implements TestReader {
+public class JsonTestReader implements TestReader {
+    private final Jsonb jsonb = JsonbBuilder.create();
     private final Path inputFile;
 
     @Override
-    public List<Object> read() throws IOException {
-        try (InputStream fileInStream = new BufferedInputStream(new FileInputStream(inputFile.toFile()));
-             InputStream inputStream = encodeInputStream(fileInStream)) {
+    public List<?> read() throws IOException {
+        try (InputStream fileInStream = new FileInputStream(inputFile.toFile());
+             BufferedReader reader = new BufferedReader(new InputStreamReader(encodeInputStream(fileInStream)))) {
             List<Object> records = new ArrayList<>();
-            SampleData.SampleDataPb pb;
-            while ((pb = SampleData.SampleDataPb.parseDelimitedFrom(inputStream)) != null) {
-                records.add(pb);
+            while (reader.ready()) {
+                String line = reader.readLine();
+                SampleDataJson entity = jsonb.fromJson(line, SampleDataJson.class);
+                records.add(entity);
             }
             return records;
         }

@@ -49,6 +49,10 @@ dependencies {
     implementation 'org.xerial:sqlite-jdbc:3.36.0.3'
     implementation 'org.jdbi:jdbi3-core:3.23.0'
     implementation 'org.jdbi:jdbi3-sqlobject:3.23.0'
+
+    implementation 'javax.json.bind:javax.json.bind-api:1.0'
+    implementation 'org.eclipse:yasson:1.0'
+    implementation 'org.glassfish:javax.json:1.1'
 }
 
 application {
@@ -65,3 +69,7 @@ protobuf {
 }
 
 sourceSets.main.java.srcDirs("${buildDir}/generated/source/proto/main/java")
+
+tasks.withType(JavaCompile) {
+    options.compilerArgs << '-parameters'
+}

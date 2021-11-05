@@ -7,6 +7,8 @@ import de.qaware.avro.AvroTestReader;
 import de.qaware.avro.AvroTestWriter;
 import de.qaware.compression.Compression;
 import de.qaware.data.SampleDataAvro;
+import de.qaware.json.JsonTestReader;
+import de.qaware.json.JsonTestWriter;
 import de.qaware.parquet.avro.AvroParquetTestReader;
 import de.qaware.parquet.avro.AvroParquetTestWriter;
 import de.qaware.parquet.group.GroupTestReader;
@@ -58,6 +60,8 @@ public class TestApp {
     Path outputProtoGzip = dataTargetPath.resolve(file + ".protobuf.gzip");
     Path outputProtoBzip2 = dataTargetPath.resolve(file + ".protobuf.bzip2");
     Path outputSqLite = dataTargetPath.resolve(file + ".sqlite");
+    Path outputJson = dataTargetPath.resolve(file + ".json");
+    Path outputJsonGzip = dataTargetPath.resolve(file + ".json.gzip");
 
     /**
      * Entry point.
@@ -96,6 +100,8 @@ public class TestApp {
         readerMap.put("proto.gzip", new ProtoTestReader(outputProtoGzip));
         readerMap.put("proto.bzip2", new ProtoTestReader(outputProtoBzip2));
         readerMap.put("sqlite", new SqLiteTestReader(outputSqLite));
+        readerMap.put("json", new JsonTestReader(outputJson));
+        readerMap.put("json.gzip", new JsonTestReader(outputJsonGzip));
 
         System.gc();
         long baseHeapSize = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
@@ -139,6 +145,8 @@ public class TestApp {
         writerMap.put("sqlite", new SqLiteTestWriter(outputSqLite, Compression.NONE));
         writerMap.put("sqlite.gzip", new SqLiteTestWriter(outputSqLite, Compression.GZIP));
         writerMap.put("sqlite.bzip2", new SqLiteTestWriter(outputSqLite, Compression.BZIP2));
+        writerMap.put("json", new JsonTestWriter(outputJson, Compression.NONE));
+        writerMap.put("json.gzip", new JsonTestWriter(outputJsonGzip, Compression.GZIP));
 
         File reportCsv = dataTargetPath.resolve("write-report.csv").toFile();
         try (FileWriter fileWriter = new FileWriter(reportCsv)) {
