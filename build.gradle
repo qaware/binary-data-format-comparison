@@ -53,6 +53,8 @@ dependencies {
     implementation 'javax.json.bind:javax.json.bind-api:1.0'
     implementation 'org.eclipse:yasson:1.0'
     implementation 'org.glassfish:javax.json:1.1'
+
+    implementation 'com.esotericsoftware:kryo:5.2.0'
 }
 
 application {

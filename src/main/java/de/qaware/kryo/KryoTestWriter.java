@@ -1,13 +1,12 @@
-package de.qaware.json;
+package de.qaware.kryo;
 
+import com.esotericsoftware.kryo.Kryo;
+import com.esotericsoftware.kryo.io.Output;
 import de.qaware.api.TestWriter;
 import de.qaware.compression.Compression;
 import lombok.RequiredArgsConstructor;
 import org.apache.avro.generic.GenericRecord;
 
-import javax.json.bind.Jsonb;
-import javax.json.bind.JsonbBuilder;
-import java.io.DataOutputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -15,25 +14,29 @@ import java.nio.file.Path;
 import java.util.List;
 
 @RequiredArgsConstructor
-public class JsonTestWriter implements TestWriter {
-    private final Jsonb jsonb = JsonbBuilder.create();
+public class KryoTestWriter implements TestWriter {
     private final Path destFile;
     private final Compression compression;
 
     @Override
     public void write(List<GenericRecord> records) throws IOException {
-        try (DataOutputStream dataOutputStream = new DataOutputStream(new FileOutputStream(destFile.toFile()));
-             OutputStream outputStream = compression.outputStream(dataOutputStream)) {
+        Kryo kryo = new Kryo();
+        kryo.register(SampleDataKryo.class);
+
+
+        try (FileOutputStream fileOutputStream = new FileOutputStream(destFile.toFile());
+             OutputStream outputStream = compression.outputStream(fileOutputStream);
+             Output output = new Output(outputStream)) {
             for (var genericRecord : records) {
                 var entity = map(genericRecord);
-                String json = jsonb.toJson(entity) + "\n";
-                outputStream.write(json.getBytes());
+                kryo.writeObject(output, entity);
             }
+            output.flush();
         }
     }
 
-    private SampleDataJson map(GenericRecord genericRecord) {
-        return SampleDataJson.builder()
+    private SampleDataKryo map(GenericRecord genericRecord) {
+        return SampleDataKryo.builder()
                 .int1((int) genericRecord.get("int1"))
                 .int2((int) genericRecord.get("int2"))
                 .int3((int) genericRecord.get("int3"))

@@ -1,36 +1,37 @@
-package de.qaware.json;
+package de.qaware.kryo;
 
+import com.esotericsoftware.kryo.Kryo;
+import com.esotericsoftware.kryo.io.Input;
 import de.qaware.api.TestReader;
 import de.qaware.compression.Compression;
 import lombok.RequiredArgsConstructor;
 
-import javax.json.bind.Jsonb;
-import javax.json.bind.JsonbBuilder;
-import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
 @RequiredArgsConstructor
-public class JsonTestReader implements TestReader {
-    private final Jsonb jsonb = JsonbBuilder.create();
+public class KryoTestReader implements TestReader {
     private final Path inputFile;
 
     @Override
     public List<?> read() throws IOException {
-        try (InputStream fileInputStream = new FileInputStream(inputFile.toFile());
+        Kryo kryo = new Kryo();
+        kryo.register(SampleDataKryo.class);
+
+        try (FileInputStream fileInputStream = new FileInputStream(inputFile.toFile());
              InputStream compressionStream = encodeInputStream(fileInputStream);
-             BufferedReader reader = new BufferedReader(new InputStreamReader(compressionStream))) {
+             Input input = new Input(compressionStream)) {
             List<Object> records = new ArrayList<>();
-            while (reader.ready()) {
-                String line = reader.readLine();
-                SampleDataJson entity = jsonb.fromJson(line, SampleDataJson.class);
+
+            while (input.available() > 0) {
+                SampleDataKryo entity = kryo.readObject(input, SampleDataKryo.class);
                 records.add(entity);
             }
+
             return records;
         }
     }
