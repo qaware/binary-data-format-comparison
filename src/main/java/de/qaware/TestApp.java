@@ -11,6 +11,8 @@ import de.qaware.json.JsonTestReader;
 import de.qaware.json.JsonTestWriter;
 import de.qaware.kryo.KryoTestReader;
 import de.qaware.kryo.KryoTestWriter;
+import de.qaware.microstream.MicroStreamTestReader;
+import de.qaware.microstream.MicroStreamTestWriter;
 import de.qaware.parquet.avro.AvroParquetTestReader;
 import de.qaware.parquet.avro.AvroParquetTestWriter;
 import de.qaware.parquet.group.GroupTestReader;
@@ -21,16 +23,19 @@ import de.qaware.sqlite.SqLiteTestWriter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.avro.file.CodecFactory;
 import org.apache.avro.generic.GenericRecord;
+import org.apache.parquet.hadoop.metadata.CompressionCodecName;
 
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.stream.Stream;
 
 /**
  * Test data (de-) serialization.
@@ -65,6 +70,7 @@ public class TestApp {
     Path outputJsonGzip = dataTargetPath.resolve(file + ".json.gzip");
     Path outputKryo = dataTargetPath.resolve(file + ".kryo");
     Path outputKryoGzip = dataTargetPath.resolve(file + ".kryo.gzip");
+    Path outputMicroStream = dataTargetPath.resolve(file + ".microStream");
 
     /**
      * Entry point.
@@ -74,6 +80,9 @@ public class TestApp {
      */
     public static void main(String[] args) throws IOException {
         new TestApp().run();
+        // MicroStream keeps threads running even after shutting down the storageManager...
+        // That hinders the JVM from existing automatically.
+        System.exit(0);
     }
 
     private void run() throws IOException {
@@ -107,6 +116,7 @@ public class TestApp {
         readerMap.put("json.gzip", new JsonTestReader(outputJsonGzip));
         readerMap.put("kryo", new KryoTestReader(outputKryo));
         readerMap.put("kryo.gzip", new KryoTestReader(outputKryoGzip));
+        readerMap.put("microStream", new MicroStreamTestReader(outputMicroStream));
 
         System.gc();
         long baseHeapSize = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
@@ -116,7 +126,7 @@ public class TestApp {
             for (var entry : readerMap.entrySet()) {
                 String name = entry.getKey();
                 TestReader reader = entry.getValue();
-                long fileSize = reader.getInputFile().toFile().length();
+                long fileSize = fileOrFolderSize(reader.getInputFile());
                 long tStart = System.nanoTime();
                 List<?> objects = reader.read();
                 long count = objects.size();
@@ -154,6 +164,7 @@ public class TestApp {
         writerMap.put("json.gzip", new JsonTestWriter(outputJsonGzip, Compression.GZIP));
         writerMap.put("kryo", new KryoTestWriter(outputKryo, Compression.NONE));
         writerMap.put("kryo.gzip", new KryoTestWriter(outputKryoGzip, Compression.GZIP));
+        writerMap.put("microStream", new MicroStreamTestWriter(outputMicroStream));
 
         File reportCsv = dataTargetPath.resolve("write-report.csv").toFile();
         try (FileWriter fileWriter = new FileWriter(reportCsv)) {
@@ -165,10 +176,25 @@ public class TestApp {
                 long tEnd = System.nanoTime();
                 double dt = (tEnd - tStart) / 1e9;
                 log.info(String.format("Wrote %d entries in %.3fs (%s)", allRecords.size(), dt, name));
-                long fileSize = writer.getOutputFile().toFile().length();
+                long fileSize = fileOrFolderSize(writer.getOutputFile());
                 fileWriter.write(String.format("%s,%d,%d,%.3f%n", name, allRecords.size(), fileSize, dt));
             }
         }
+    }
+
+    private long fileOrFolderSize(Path path) {
+        var f = path.toFile();
+        if (f.isFile()) {
+            return f.length();
+        } else if (f.isDirectory()) {
+            try (Stream<Path> stream = Files.list(path)) {
+                return stream.mapToLong(this::fileOrFolderSize).sum();
+            } catch (IOException e) {
+                log.error("Could not determine file/folder size", e);
+                return 0;
+            }
+        }
+        throw new IllegalStateException("Not a file nor a directory?!");
     }
 
     private List<GenericRecord> generateRandomData() {

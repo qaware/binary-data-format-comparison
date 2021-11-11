@@ -10,14 +10,14 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class SampleDataKryo {
-    int int1;
-    int int2;
-    int int3;
-    int int4;
-    int int5;
-    String string1;
-    String string2;
-    String string3;
-    String string4;
-    String string5;
+    private int int1;
+    private int int2;
+    private int int3;
+    private int int4;
+    private int int5;
+    private String string1;
+    private String string2;
+    private String string3;
+    private String string4;
+    private String string5;
 }
