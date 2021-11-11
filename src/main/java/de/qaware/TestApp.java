@@ -21,8 +21,6 @@ import de.qaware.sqlite.SqLiteTestWriter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.avro.file.CodecFactory;
 import org.apache.avro.generic.GenericRecord;
-import org.apache.commons.lang3.RandomStringUtils;
-import org.apache.parquet.hadoop.metadata.CompressionCodecName;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -42,8 +40,9 @@ import java.util.Random;
 public class TestApp {
     private static final int NUM_DATA_SAMPLES = 10_000_000;
     private static final double NUM_STRINGS = 10_000;
+    private static final long SEED = 42;
 
-    Random random = new Random();
+    Random random = new Random(SEED);
 
     Path basePath = Path.of(".");
     Path dataTargetPath = basePath.resolve("build/data");
@@ -177,7 +176,7 @@ public class TestApp {
 
         List<String> stringPool = new ArrayList<>();
         for (int i = 0; i < NUM_STRINGS; i++) {
-            stringPool.add(RandomStringUtils.randomAlphanumeric(0, 20));
+            stringPool.add(randomString());
         }
 
         List<GenericRecord> allRecords = new ArrayList<>(NUM_DATA_SAMPLES);
@@ -202,5 +201,17 @@ public class TestApp {
 
     private String nextString(List<String> stringPool) {
         return stringPool.get(random.nextInt(stringPool.size()));
+    }
+
+    private String randomString() {
+        int leftLimit = 48; // numeral '0'
+        int rightLimit = 122; // letter 'z'
+        int targetStringLength = random.nextInt(20);
+
+        return random.ints(leftLimit, rightLimit + 1)
+                .filter(i -> (i <= 57 || i >= 65) && (i <= 90 || i >= 97))
+                .limit(targetStringLength)
+                .collect(StringBuilder::new, StringBuilder::appendCodePoint, StringBuilder::append)
+                .toString();
     }
 }
