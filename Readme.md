@@ -6,6 +6,9 @@ Comparison of different binary data formats:
 * Protobuf
 * Parquet
 * Sqlite
+* JSON
+* Kryo
+* MicroStream
 
 ## Usage
 
